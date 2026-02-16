@@ -4,6 +4,7 @@ Fork of [samuelmeuli/action-electron-builder](https://github.com/samuelmeuli/act
 # Differences
 
 - Adds support for different package managers (npm, pnpm, yarn, bun).
+- `github_token` is optional if not releasing.
 
 # Electron Builder Action
 
@@ -48,6 +49,7 @@ GitHub Actions allows you to build your app on macOS, Windows and Linux without 
            with:
              # GitHub token, automatically provided to the action
              # (No need to define this secret in the repo settings)
+             # optional if not releasing
              github_token: ${{ secrets.github_token }}
 
              # If the commit is tagged with a version (e.g. "v1.0.0"),

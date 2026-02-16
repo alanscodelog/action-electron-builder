@@ -87,7 +87,16 @@ const runAction = () => {
 		exit(`\`package.json\` file not found at path "${pkgJsonPath}"`);
 	}
 
-	setEnv("GH_TOKEN", getInput("github_token", true));
+	const ghToken = getInput("github_token");
+	if (ghToken) {
+		setEnv("GH_TOKEN", ghToken);
+	} else {
+		if (release) {
+			exit(`Release requires a github_token and no github token was specified.`)
+		} else {
+			log("WARNING: \"github_token\" not provided. Action will still build but nothing will be published to GitHub.");
+		}
+	}
 
 	if (platform === "mac") {
 		setEnv("CSC_LINK", getInput("mac_certs"));

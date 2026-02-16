@@ -5,7 +5,7 @@ description: GitHub Action for building and releasing Electron apps
 inputs:
   github_token:
     description: GitHub authentication token
-    required: true
+    required: false
   mac_certs:
     description: Base64-encoded code signing certificate for macOS
     required: false
