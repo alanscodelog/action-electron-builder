@@ -73,27 +73,22 @@ const runAction = () => {
 	const args = getInput("args") || "";
 	const maxAttempts = Number(getInput("max_attempts") || "1");
 
-	// TODO: Deprecated option, remove in v2.0. `electron-builder` always requires a `package.json` in
-	// the same directory as the Electron app, so the `package_root` option should be used instead
-	const appRoot = getInput("app_root") || pkgRoot;
+	const manager = getInput("package_manager", true);
+	const validManagers = ["npm", "pnpm", "bun", "yarn"];
+
+	if (!validManagers.includes(manager)) {
+		exit(`Unsupported package_manager: "${manager}". Must be one of: ${validManagers.join(", ")}`);
+	}
+
+	log(`Using ${manager} in directory "${pkgRoot}"`);
 
 	const pkgJsonPath = join(pkgRoot, "package.json");
-	const pkgLockPath = join(pkgRoot, "package-lock.json");
-
-	// Determine whether NPM should be used to run commands (instead of Yarn, which is the default)
-	const useNpm = existsSync(pkgLockPath);
-	log(`Will run ${useNpm ? "NPM" : "Yarn"} commands in directory "${pkgRoot}"`);
-
-	// Make sure `package.json` file exists
 	if (!existsSync(pkgJsonPath)) {
 		exit(`\`package.json\` file not found at path "${pkgJsonPath}"`);
 	}
 
-	// Copy "github_token" input variable to "GH_TOKEN" env variable (required by `electron-builder`)
 	setEnv("GH_TOKEN", getInput("github_token", true));
 
-	// Require code signing certificate and password if building for macOS. Export them to environment
-	// variables (required by `electron-builder`)
 	if (platform === "mac") {
 		setEnv("CSC_LINK", getInput("mac_certs"));
 		setEnv("CSC_KEY_PASSWORD", getInput("mac_certs_password"));
@@ -102,38 +97,42 @@ const runAction = () => {
 		setEnv("CSC_KEY_PASSWORD", getInput("windows_certs_password"));
 	}
 
-	// Disable console advertisements during install phase
 	setEnv("ADBLOCK", true);
 
-	log(`Installing dependencies using ${useNpm ? "NPM" : "Yarn"}…`);
-	run(useNpm ? "npm install" : "yarn", pkgRoot);
+	log(`Installing dependencies using ${manager}…`);
+	const installCmd = manager === "yarn" ? "yarn" : `${manager} install`;
+	run(installCmd, pkgRoot);
 
-	// Run NPM build script if it exists
 	if (skipBuild) {
 		log("Skipping build script because `skip_build` option is set");
 	} else {
 		log("Running the build script…");
-		if (useNpm) {
+		if (manager === "npm") {
 			run(`npm run ${buildScriptName} --if-present`, pkgRoot);
 		} else {
-			// TODO: Use `yarn run ${buildScriptName} --if-present` once supported
-			// https://github.com/yarnpkg/yarn/issues/6894
 			const pkgJson = JSON.parse(readFileSync(pkgJsonPath, "utf8"));
 			if (pkgJson.scripts && pkgJson.scripts[buildScriptName]) {
-				run(`yarn run ${buildScriptName}`, pkgRoot);
+				run(`${manager} run ${buildScriptName}`, pkgRoot);
 			}
 		}
 	}
-
 	log(`Building${release ? " and releasing" : ""} the Electron app…`);
-	const cmd = useVueCli ? "vue-cli-service electron:build" : "electron-builder";
+	const binary = useVueCli ? "vue-cli-service" : "electron-builder";
+	const binPath = join(pkgRoot, "node_modules", ".bin", binary);
+
+	if (!existsSync(binPath)) {
+		exit(`Binary not found at ${binPath}. Ensure it is installed as a dependency.`);
+	}
+
+	const buildArgs = useVueCli ? "electron:build" : "";
+
 	for (let i = 0; i < maxAttempts; i += 1) {
 		try {
 			run(
-				`${useNpm ? "npx --no-install" : "yarn run"} ${cmd} --${platform} ${
+				`${binPath} ${buildArgs} --${platform} ${
 					release ? "--publish always" : ""
 				} ${args}`,
-				appRoot,
+				pkgRoot,
 			);
 			break;
 		} catch (err) {

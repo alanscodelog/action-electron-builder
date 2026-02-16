@@ -1,3 +1,10 @@
+
+Fork of [samuelmeuli/action-electron-builder](https://github.com/samuelmeuli/action-electron-builder/) which has been archived.
+
+# Differences
+
+- Adds support for different package managers (npm, pnpm, yarn, bun).
+
 # Electron Builder Action
 
 **GitHub Action for building and releasing Electron apps**
@@ -31,7 +38,7 @@ GitHub Actions allows you to build your app on macOS, Windows and Linux without 
          - name: Check out Git repository
            uses: actions/checkout@v1
 
-         - name: Install Node.js, NPM and Yarn
+         - name: Install Node.js
            uses: actions/setup-node@v1
            with:
              node-version: 10
@@ -46,6 +53,7 @@ GitHub Actions allows you to build your app on macOS, Windows and Linux without 
              # If the commit is tagged with a version (e.g. "v1.0.0"),
              # release the app after building
              release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+             package_manager: npm
    ```
 
 ## Usage
@@ -71,12 +79,13 @@ After building successfully, the action will publish your release artifacts. By 
 
 You can configure the action further with the following options:
 
-- `package_root`: Directory where NPM/Yarn commands should be run (default: `"."`)
-- `build_script_name`: Name of the optional NPM build script which is executed before `electron-builder` (default: `"build"`)
-- `skip_build`: Whether the action should execute the NPM build script before running `electron-builder`
+- `package_root`: Directory where commands should be run (default: `"."`)
+- `build_script_name`: Name of the optional build script which is executed before `electron-builder` (default: `"build"`)
+- `skip_build`: Whether the action should execute the build script before running `electron-builder`
 - `use_vue_cli`: Whether to run `electron-builder` using the [Vue CLI plugin](https://nklayman.github.io/vue-cli-plugin-electron-builder) instead of calling the command directly
 - `args`: Other arguments to pass to the `electron-builder` command, e.g. configuration overrides (default: `""`)
 - `max_attempts`: Maximum number of attempts for completing the build and release step (default: `1`)
+- `package_manager` : The package manager to use (npm, pnpm, yarn, or bun).
 
 See [`action.yml`](./action.yml) for a list of all possible input variables.
 
