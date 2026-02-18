@@ -108,10 +108,6 @@ const runAction = () => {
 
 	setEnv("ADBLOCK", true);
 
-	log(`Installing dependencies using ${manager}…`);
-	const installCmd = manager === "yarn" ? "yarn" : `${manager} install`;
-	run(installCmd, pkgRoot);
-
 	if (skipBuild) {
 		log("Skipping build script because `skip_build` option is set");
 	} else {

@@ -5,6 +5,7 @@ Fork of [samuelmeuli/action-electron-builder](https://github.com/samuelmeuli/act
 
 - Adds support for different package managers (npm, pnpm, yarn, bun).
 - `github_token` is optional if not releasing.
+- Does NOT auto-install. I preffer if installation is a seperate step.
 
 # Electron Builder Action
 
